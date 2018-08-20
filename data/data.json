@@ -1,0 +1,43 @@
+{
+	"Obox": {
+		"JNU": {
+			"host": "127.0.0.1",
+			"port": "4243",
+			"camera": {
+				"camera": {
+					"url": "127.0.0.1:8889"
+				},
+				"camera1": {
+					"url": "127.0.0.1:8890"
+				},
+				"camera2": {
+					"url1": "test"
+				}
+			}
+		},
+		"KKU": {
+			"host": "127.0.0.2",
+			"port": "4243",
+			"camera": {
+				"camera1": {
+					"url": "url1"
+				},
+				"camera2": {
+					"url": "url2"
+				},
+				"camera3": {
+					"url": "url3"
+				}
+			}
+		},
+		"JNU2": {
+			"host": "127.0.0.3",
+			"port": "4243",
+			"camera": {
+				"test": {
+					"url": "url"
+				}
+			}
+		}
+	}
+}
