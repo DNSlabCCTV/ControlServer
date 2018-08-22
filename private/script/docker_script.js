@@ -83,9 +83,6 @@ exports.getContainerName = function(host, port, callback) {
 
 exports.getPort = function(host, port, callback) {
 
-  var host = '10.0.2.15';
-  var port = 4243;
-
   var docker_host = new Docker({
     host: host,
     port: port
