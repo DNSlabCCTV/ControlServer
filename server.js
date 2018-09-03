@@ -18,7 +18,9 @@ var server = app.listen(3000, function() {
 app.use(express.static('public'));
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded());
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 
 app.use(session({
   secret: '@#@$MYSIGN#@$#$',
