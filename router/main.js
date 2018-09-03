@@ -1,10 +1,12 @@
+var kerberos = require(__dirname + "/../private/script/kerberos_script"); //kerberos 컨테이너 실행을위한 함수 모듈
+var Docker = require('dockerode'); //docker remote api를 사용할 수 있는 Nodejs Module
+var file_path = "data/data.json" //data 파일의 주소 (프로젝트 폴더를 기준으로)
+
+//Server의 라우팅 메소드
 module.exports = function(app, fs, docker, json) {
-  //docker, json은 docker와 json데이터관리를 하는 함수 모듈이다.
-
-  var file_path = "data/data.json" //data 파일의 주소 (프로젝트 폴더를 기준으로)
-
   /*
-  컨트롤 페이지 렌더링 함수
+  Obox Json 데이터를 받아 ejs파일로 데이터 값을 전달한다.
+  추후 개발툴 결정후 데이터 전달 방식을 결정한다.
   */
   app.get('/', function(req, res) {
     fs.readFile(__dirname + "/../data/data.json", 'utf8', function(err, data) {
@@ -16,20 +18,12 @@ module.exports = function(app, fs, docker, json) {
   });
 
   /*
-  RESTful API Routing
-  - data.json 파일에 저장된 Type Obox및 Obox에 연결된 Camera 데이를 Json형식으로 return 한다.
-
-  1. /Data get방식 obox, name, host, port, camera등의 데이터를 리턴한다.
-  2. /getOboxList get방식 koren망에 연결된 obox의 리스트를 리턴한다.
-  3. /getTypeOboxByName post방식 obox의 이름을 받아 해당 obox에 host, port, camrea정보를 리턴한다.
-  4. /getCameraByObox/:oboxname get방식 obox의 이름을 입력받아 해당 오박스에 연결된 camera정보를 리턴한다.
-  5. /getCameraUrlByCamera/:cameraName get방식 Camera의 이름(컨테이너 이름)을 입력받아 해당 컨테이너의 스트림 url을 리턴한다.
-  6. /addObox/:oboxName post방식 이름과 host, port를 입력 받아 새로운 Obox를 추가한다.
-  7. /addCamera/:oboxName obox이름을 입력받아 해당 obox에 카메라 정보(컨테이너) 정보를 추가한다.
+    타대학에서의 HTTP Proxy URL을 받기위한 Restful API
   */
 
   /*
-  /Data - data.json에 포함된 데이터 전체를 리턴한다.
+  GET /Data
+  서버에 저장된 obox, container, camera 정보를 가지고 있는 json 형식의 데이터를 리턴한다.
   */
   app.get('/Data', function(req, res) {
     json.getData(fs, file_path, function(err, data) {
@@ -37,19 +31,53 @@ module.exports = function(app, fs, docker, json) {
     });
   });
 
+  /*
+  GET /getOboxList
+  서버에 저장된 obox리스트의 이름을 json형식으로 리턴한다.
+  */
   app.get('/getOboxList', function(req, res) {
     json.getOboxList(fs, file_path, function(err, data) {
       res.send(data);
     });
   });
 
-  app.post('/getTypeOboxByName', function(req, res) {
-    var oboxName = req.body.name;
-    json.getTypeOboxByName(fs, file_path, oboxName, function(err, data) {
+  /*
+  GET /getOboxByName/?getOboxName
+  obox의 이름을 path로 하여 해당 obox의 정보를 json형식으로 리턴한다.
+  정보 = host, port, container
+  */
+  app.get('/getOboxByName/:oboxName', function(req, res) {
+    var oboxName = req.params.oboxName;
+    json.getOboxByName(fs, file_path, oboxName, function(err, data) {
       res.send(data);
     });
   })
 
+  /*
+  GET /getContainerByObox/?oboxName
+  obox의 이름을 path로 하여 해당 obox에서 실행중인 컨테이너 정보를 json형식으로 리턴한다.
+  */
+  app.get('/getContainerByObox/:oboxName', function(req, res) {
+    var oboxName = req.params.oboxName;
+    json.getContainerByObox(fs, file_path, oboxName, function(err, data) {
+      res.send(data);
+    });
+  });
+
+  /*
+  GET /getCamera
+  obox에 연결된 카메라의 이름과 proxy url을 json 형식으로 리턴한다.
+  */
+  app.get('/getCamera', function(req, res) {
+    json.getCamera(fs, file_path, function(err, data) {
+      res.send(data);
+    });
+  });
+
+  /*
+  GET /getCameraByObox/:oboxName
+  obox의 이름을 path로 하여 해당 obox에서 실행중인 컨테이너 내의 등록된 카메라의 이름과 proxy url을 json형식으로 리턴한다.
+  */
   app.get('/getCameraByObox/:oboxName', function(req, res) {
     var oboxName = req.params.oboxName;
     json.getCameraByObox(fs, file_path, oboxName, function(err, data) {
@@ -57,21 +85,43 @@ module.exports = function(app, fs, docker, json) {
     });
   });
 
-  app.get('/getCameraUrlByCamera/:cameraName', function(req, res) {
-    var cameraName = req.params.cameraName;
-    json.getCameraUrlByCamera(fs, file_path, cameraName, function(err, data) {
+  /*
+  GET /getUrlByObox/?oboxName
+  obox의 이름을 path로 하여 obox에 연결된 카메라의 proxy url만을 json 형식으로 리턴한다.
+  */
+  app.get('/getUrlByObox/:oboxName', function(req, res) {
+    var oboxName = req.params.oboxName;
+    json.getUrlByObox(fs, file_path, oboxName, function(err, data) {
       res.send(data);
     });
   });
 
-  app.post('/addObox/:oboxName', function(req, res) {
+  /*
+  GET /getUrlByOboxCamera/:oboxName/:cameraName
+  obox의 이름과 카메라 이름을 path로 하여 해당 obox내의 카메라의 url을 리턴한다.
+  */
+  app.get('/getUrlByOboxCamera/:oboxName/:cameraName', function(req, res) {
+    var oboxName = req.params.oboxName;
+    var cameraName = req.params.cameraName;
+    json.getUrlByOboxCamera(fs, file_path, oboxName, cameraName, function(err, data) {
+      res.send(data);
+    });
+  });
+
+
+  /*
+  POST /addObox
+  obox 이름, obox host, obox port를 body parameter로 입력 받아
+  data.json 파일에 새로운 Obox를 추가한다.
+  */
+  app.post('/addObox', function(req, res) {
 
     var result = {};
-    var obox = req.params.oboxName; //obox이름
+    var obox = req.body.name; //obox이름
     var host = req.body.host; //obox host
     var port = req.body.port; //obox docker_port
 
-    // host와 port가 입력 받지 않았을 경우
+    // host와 port가 입력 받지 않았을 경우에러
     if (!req.body["host"] || !req.body["port"]) {
       result["success"] = 0;
       result["error"] = "invalid request";
@@ -79,7 +129,7 @@ module.exports = function(app, fs, docker, json) {
       return;
     }
 
-    //obox추가
+    //data.json 파일에 추가한다.
     json.addObox(fs, file_path, obox, host, port, function(err, result) {
       res.json(result);
       return;
@@ -87,107 +137,111 @@ module.exports = function(app, fs, docker, json) {
 
   });
 
-  app.post('/addCamera/:oboxname', function(req, res) {
+  /*
+  POST /createContainer
+  image type(kerbero, shinobi, zoneminder), cameras, rtspURLs, containerPorts, obox이름을
+  입력 받아 해당 obox에 지정된 openCCTV 컨테이너를 생성 실행하고
+  컨테이너에 RTSP URL을 자동으로 설정한다.
 
-    var result = {};
+  Shinobi, Zoneminder는 컨테이너 생성, 자동화 부분을 함수를 추가 개발 하여야 한다.
+  */
+  app.post('/createContainer', function(req, res) {
 
-    // 이름과 url 입력 받지 않았을 경우
-    if (!req.body["name"] || !req.body["url"]) {
-      result["success"] = 0;
-      result["error"] = "invalid request";
-      res.json(result);
-      return;
-    }
+    var docker = require(__dirname + "/../private/script/docker_script"); // 이미지에 따른 컨테이너 설정 파라메터 자동 생성 모듈
+    var image = req.body.image; //이미지 이름 kerberos, shinobi, zoneminder
+    var cameras = req.body.cameras; //cameras 카메라 이름 배열
+    var rtsp = req.body.rtsp; //rtsp주소 배열
+    /*
+    포트는 이미지에 따라 갯수가 다르다.
+    kerberos = 2개 container_port[0] = webPort, container_port[1] = streamPort
+    */
+    var container_port = req.body.container_port; // 사용할 포트
+    var obox = req.body.obox; //컨테이너를 생성할 obox
 
-    var obox = req.params.oboxname;
-    var name = req.body.name;
-    var url = req.body.url;
+    //data.json에 저장된 obox의 host와 port를 가져온다.
+    json.getOboxByName(fs, file_path, obox, function(err, data) {
 
-    //camera 추가
-    json.addCamera(fs, file_path, obox, name, url, function(err, result) {
-      res.json(result);
-    });
+      if (!data.success)
+        return res.send(result); //해당 obox가 없을 경우
 
-  });
+      docker_host = data[obox].host; //obox host
+      docker_port = data[obox].port; //obox port
+      container_name = cameras[0]; //컨테이너 이름은 입력된 카메라 이름중 첫번쨰 이름으로 컨테이너를 생성한다.
+      container_port = ["80", "8889"]; //Test를 위한 80, 8889포트 사용( 외부 포트 )
 
-  app.delete('/deleteCamera/:oBox/:cameraName', function(req, res) {
-    var result = {};
-    //json 데이터 가져오기
-    fs.readFile(__dirname + "/../data/data.json", "utf8", function(err, data) {
-      var data = JSON.parse(data);
-
-      // obox, 혹은 camera가 없을 경우 실패
-      if (!data.Obox[req.params.oBox].camera[req.params.cameraName]) {
-        result["success"] = 0;
-        result["error"] = "not found";
-        res.json(result);
-        return;
-      }
-
-      //파일 update
-      json.deleteCamera(fs, file_path, req.params.oBox, req.params.cameraName, function(result) {
-        res.json(result);
-        return;
+      /*
+      Dockerode라이브러리를 사용한 docker API사용
+      */
+      var dockerHost = new Docker({
+        host: docker_host,
+        port: docker_port
       });
 
+      //docker API사용을 위한 parameter데이터 생성 함수
+      docker.dockerConfig(image, container_name, container_port, function(parameter) {
+        //Dockerode를 사용하여 도커 컨테이너 생성
+        dockerHost.createContainer(parameter).then(function(container) {
+          return container.start(); // 생성된 컨테이너 실행
+        }).then(function(container) {
+
+          /*
+            Todo
+            Zoneminder, Shinobi 컨테이너에 따른 자동화 함수 구현
+          */
+
+          //실행된 kerberos의 ipcamera url 설정
+          kerberos.kerberosSetup(docker_host, container_port, container_name, rtsp, function(result, data) {
+            //카메라 설정 실패시
+            if (result){
+              return res.send(false);
+              /*
+                컨테이너 제거 함수 추가
+              */
+            }
+            //data.json에 컨테이너와 카메라 추가
+            json.addContainer(fs, file_path, obox, container_name, data, function(err, result) {
+              return res.send(true); // 컨테이너 생성, 실행 및 json데이터 추가 성공;
+            });
+          });
+
+        }).catch(function(err) {
+          /*
+          todo : 에러처리
+          */
+          console.log(err);
+        });
+      });
     });
   });
 
   /*
-  RESTful API
-  Docker Server의 Host와 Port를 입력 받아
-  해당 Docker Server의 Remot API를 사용하여 컨테이너 정보를 받아와
-  port와 name을 파싱한다.
+  GET /getPort/?oboxName
+  oboxName을 path로 받아 해당 obox에서 컨테이너가 사용하는 Port의 값을 넘겨준다.
+
+  dockerode를 통한 컨테이너 정보 조회시 정지된 컨테이너는 확인 할 수 없다.
+
+  2018/09/03 - docker api를 dockerode 모듈을 통하여 사용
   */
+  app.get('/getPort/:oboxName', function(req, res) {
+    var result = {};
+    result["success"] = 0;
 
-  app.post('/createContainer', function(req, res) {
+    var obox = req.params.oboxName;//oboxName
+    json.getOboxByName(fs, file_path, obox, function(err, data) {
 
-    var docker = require(__dirname + "/../private/script/docker_script");
-    var image = req.body.image;
-    var name = req.body.name;
-    var rtsp = req.body.rtsp;
-    var docker_host_name = req.body.docker_host_name;
-    var docker_host = req.body.docker_host;
-    var docker_port = req.body.docker_port;
-    var container_port = req.body.container_port;
+      if (!data.success)
+        return res.send(result); //obox가 없을 경우
 
-    docker.createContainer(image, docker_host, docker_port, container_port, name, function(err, container) {
+      host = data[obox].host;
+      port = data[obox].port;
 
-      container.start(function(err, data) {
-        if (err) {
-          res.send(false);
-          return;
-        } else {
-          json.addCamera(fs, file_path, docker_host_name, name, rtsp, function(err, result) {
-            res.send(true);
-            return;
-          });
-        }
+      docker.getPort(host, port, function(ports) {
+        result["success"] = 1;
+        result[obox] = ports;
+        res.send(result); //getPort
       });
 
     });
-
-  });
-
-
-  app.post('/getContainer', function(req, res) {
-    var host = req.body.docker_host;
-    var port = req.body.docker_port;
-
-    docker.getContainerName(host, port, function(names) {
-      res.send(names);
-    });
-
-  });
-
-  app.post('/getPort', function(req, res) {
-    var host = req.body.docker_host;
-    var port = req.body.docker_port;
-
-    docker.getPort(host, port, function(ports) {
-      res.send(ports);
-    });
-
   });
 
 }
