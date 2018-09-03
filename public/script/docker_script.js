@@ -5,165 +5,112 @@ $(document).on("click", "#obx", function() {
   $('#obox').val(obox);
 })
 
-//createContainer - 클라이언트에서 Container이름, OpenCCTV 종류, RTSP url 을 입력받아
-// Container의 중복 여부와 컨테이너에서 사용될 포트를 중복하지 않게 생성하여
-// Server에 Container생성을 요청한다.
-// Server에 Create Container를 요청하기 위해선
-// docker_host, docker_port, docker_name, container_name, rtsp, port값이 필요하다.
-// docker_host - docker remote api를 사용할 docker_server_host이다.
-// docker_port - docker remote api를 사용한 docker_server의 개방 port이다.
-// docker_name - json 파일에 카메라가 추가될 type obox이름이다.
-// container_name - 생성할 container의 이름이다.
-// rtsp - 컨테이너에서 영상을 스트리밍할 rtsp url 주소이다. (배열)
-// port - OpenCCTV컨테이너 마다 사용하게될 포트이다.
+/*
+createContainer() - 입력 받은 값으로 컨테이너 생성 request를 보내느 함수
 
+oboxName, cameraName, rtspURLs, Ports 값을 params로 서버에 request를 보낸다.
+
+oboxName = JNU, KKU, NUC
+cameraName = 카메라 이름들의 배열
+rtspURLs = 카메라의 RTSP url 배열
+Ports = 컨테이너가 사용할 포트 (난수 생성으로 기존의 사용 포트와 중복 되지 않게 생성한다.)
+*/
 function createContainer() {
 
-  headers = {}; //request header의 데이터를 담을 배열
-  body = {}; //request body의 데이터를 담을 배열
-  body["name"] = $('#obox').val(); //Container
-  obox = getData("./getTypeOboxByName", "POST", headers, body); //docker_host를 받아온다.
-  body = {}; // body 데이터 reset
+  headers = {}; //request header의 데이터를 담을 객체
+  body = {}; //request body의 데이터를 담을 객체
 
-  docker_host = obox.host; //docker host
-  docker_port = obox.port; //docker port
   image = $(":input:radio[name=image]:checked").val(); //선택된 OpenCCTV
-  name = $('#name').val(); //container name
+  obox = $('#obox').val(); //obox
   /*
-   다중 url 부분을 구현해야 한다.
+  다중 입력 처리
   */
-  rtsp = $('#rtsp').val(); //rtsp url
+  cameras = [$('#name').val()]; //container name
+  rtsp = [$('#rtsp').val()]; //rtsp url
 
   /*
   body data 생성
   */
-  body["docker_host_name"] = $('#obox').val();
-  body["docker_host"] = docker_host;
-  body["docker_port"] = docker_port;
+  body["obox"] = obox;
   body["image"] = image;
-  body["rtsp"] = [rtsp]; //
+  body["rtsp"] = rtsp;
+  body["cameras"] = cameras;
 
-  /*name 중복 여부 체크
-  checkContainerName() - host, port, name를 입력받아 해당 서버에서 실행중인
-  container의 이름을 입력받아 중복 될경우 false 중복 되지 않을 경우 true를
-  리턴한다.
-  */
-  checkContainerName(docker_host, docker_port, name, function(result) {
+  //해당 obox의 사용중인 카메라 이름들을 받아 중복 여부를 확인한다.
+  getCameras(obox, function(data) {
+    //중복 체크
+    dufilcateCheck(cameras, data, function(dufilcate) {
 
-    //중복 여부 검사
-    if (!result) {
-      alert("중복됩니다");
-      return;
-    } else {
-      //request body 데이터 추가
-      body["name"] = name;
-      /*port 생성
-      getport() - host, port를 입력 받아 해당 docker_server에서
-      실행중인 컨테이너들이 사용하고 있는 port를 배열로 리턴 받는다.
-      */
-      getPort(docker_host, docker_port, function(result) {
-        /* 이미지에 따른 포트 갯수를 지정해주어야 한다.
-        shinobi, zoneminder 마다 포트 확인 필요!
-        */
-        //kerberos의 경우
-        if (image == "kerberos") {
-          num = 2;
-        } else {
-          num = 1;
+      if (!dufilcate)
+        return false; // 중복 될 경우
+
+      //obox에서 사용중이 포트 확인
+      getPort(obox, function(ports) {
+        var numberOfPorts = 0;
+
+        //OpenCCTV별 사용할 port 갯수 설정
+        switch (image) {
+          case "kerberos":
+            numberOfPorts = 2;
+            break;
+          case "shinobi":
+            numberOfPorts = 1;
+            break;
+          case "zoneminder":
+            numberOfPorts = 1;
+            break;
+          default:
+            return false;
         }
-        /*
-        newPort() - num(원하는 port갯수)와 result(사용중인 포트 배열)
-        을 입력받아 중복 되지 않는 포트를 num 갯수 만큼 return 한다.
-        */
-        newPort(num, result, function(ports) {
-          //body에 데이터 추가
-          body["container_port"] = ports;
-          //서버에 컨테이너 실행을 요청한다.
-          result = getData("./createContainer", "POST", headers, body);
-          if (result == true) {
-            console.log("success");
-          } else {
-            console.log(result);
-          }
-          return;
+
+        //중복되지 않는 포트를 생성
+        newPort(numberOfPorts, ports, function(newPort) {
+          body["container_port"] = newPort;
+          //createContainer request를 보낸다.
+          getData("./createContainer", "POST", headers, body, function(result) {
+            if (result) {
+              console.log("success"); // 성공
+            } else {
+              console.log(result); //실패
+            }
+            return;
+          });
         });
       });
-    }
+    });
   });
-}
+};
 
 /*
-checkContainerName()
-도커 호스트의 컨테이너 이름과 사용자가 입력한 컨테이너의
-중복 여부를 확인하는 함수이다.
-host - 접근할 docker_server의 host
-port - 접근할 docker_server의 port
-name - 사용자가 입력한 컨테이너 이름
-
-중복이 없을경우 true 중복될 경우 false를 return 한다.
+dufilcateCheck() - 입력된 두 배열의 중복 데이터 값 여부를 확인
 */
-function checkContainerName(host, port, name, callback) {
+function dufilcateCheck(inputs, origins, callback) {
+
   //docker host url과 사용자 입력 컨테이너 이름을 받아온다.
-  var flag = true;
-
-  //getContainerName(host, port)함수를 사용하여 해당 docker host의 컨테이너 정보를 가져온다.
-  getContainerName(host, port, function(names) {
-
-    //중복 확인
-    for (i = 0; i < names.length; i++) {
-      if (name == names[i]) {
-        flag = false;
-      }
+  for (i = 0; i < origins.length; i++) {
+    for (j = 0; j < inputs.length; j++) {
+      if (inputs[j] == origins[i])
+        return callback(false); //중복
     }
-
-    if (callback === undefined) {
-      return flag;
-    } else {
-      callback(flag);
-    }
-  });
-
-}
-
-/*
-getContainerName()
-도커 호스트의 컨테이너 이름을 가져온다.
-
-host - 접근할 docker_server의 host
-port - 접근할 docker_server의 port
-*/
-function getContainerName(host, port, callback) {
-  var headers = {};
-  var body = {};
-  //body data 작성
-  body["docker_host"] = host;
-  body["docker_port"] = port;
-  //server에 해당 도커서버의 컨테이너 이름을 요청한다.
-  var containers = getData("./getContainer", "POST", headers, body);
-  if (callback === undefined) {
-    return containers;
-  } else {
-    callback(containers);
   }
-
-}
+  return callback(true);
+};
 
 /*
 getPort() - docker server에 접근하여 내부 컨테이너가 사용중인 포트번호를 가져온다.
 host, port - 컨테이너 정보를 가져올 docker host ip, port
 */
-function getPort(host, port, callback) {
+function getPort(obox, callback) {
   var headers = new Array();
   var body = {};
-  body["docker_host"] = host;
-  body["docker_port"] = port;
-  var ports = getData("./getPort", "POST", headers, body);
-  if (callback === undefined) {
-    return ports;
-  } else {
-    callback(ports);
-  }
-}
+  getData("./getPort/" + obox, "GET", headers, body, function(ports) {
+    if (callback === undefined) {
+      return ports;
+    } else {
+      callback(ports[obox]);
+    }
+  });
+};
 
 
 /*
@@ -202,7 +149,7 @@ function newPort(num, ports, callback) {
   } else {
     callback(newPorts);
   }
-}
+};
 
 /*
 getData(...) - Server에 Restful API의 결과를 받는 함수
@@ -234,8 +181,8 @@ var getData = function(url, type, header, body, callback) {
   })
 
   if (callback === undefined) {
-    return json_data
+    return json_data;
   } else {
     callback(json_data);
   }
-}
+};
