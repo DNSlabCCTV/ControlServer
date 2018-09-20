@@ -31,7 +31,7 @@ obox데이터는 'name', 'container'로 이루어 져있고 name은 해당 obox�
 }
 ```
 
-### Feaures
+### Return Type
 
 API의 결과는 Json 형식으로 전달 되고 Json 데이터는 'success'와 'result' 두 개의 key 값으로 이루어 집니다.
 
