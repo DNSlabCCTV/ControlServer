@@ -102,13 +102,7 @@ exports.getCameraByObox = function(fs, file_path, oboxName, callback) {
 
       if (oboxName == oboxArray[i].name) {
         cameraArray = oboxArray[i].camera; //컨테이너 안에 추가된 모니터 리스트
-        for (j = 0; j < cameraArray.length; j++) {
-          addCamera = {};
-          addCamera["name"] = cameraArray[j].name;
-          addCamera["url"] = cameraArray[j].url;
-          cameraList.push(addCamera);
-        }
-        result["result"] = cameraList;
+        result["result"] = cameraArray;
         return callback(err, result);
       }
 
