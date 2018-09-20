@@ -20,9 +20,9 @@ API의 결과는 Json 형식으로 전달 되고 Json 데이터는 'success'와 
 
 ### Each API
 
-#### 1. /getCamera
+#### 1. GET /getCamera
 
-'''
+```
 {
     "success": 1,
     "result": [
@@ -38,4 +38,4 @@ API의 결과는 Json 형식으로 전달 되고 Json 데이터는 'success'와 
         }
     ]
 }
-'''
+```
