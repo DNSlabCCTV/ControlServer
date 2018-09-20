@@ -9,7 +9,7 @@ module.exports = function(app, fs, docker, json) {
   추후 개발툴 결정후 데이터 전달 방식을 결정한다.
   */
   app.get('/', function(req, res) {
-    fs.readFile(__dirname + "/../data/data.json", 'utf8', function(err, data) {
+    fs.readFile(__dirname + "/../" + file_path, 'utf8', function(err, data) {
       var data = JSON.parse(data);
       res.render('index', {
         "data": data
@@ -192,7 +192,7 @@ module.exports = function(app, fs, docker, json) {
           //실행된 kerberos의 ipcamera url 설정
           kerberos.kerberosSetup(docker_host, container_port, container_name, rtsp, function(result, data) {
             //카메라 설정 실패시
-            if (result){
+            if (result) {
               return res.send(false);
               /*
                 컨테이너 제거 함수 추가
@@ -226,7 +226,7 @@ module.exports = function(app, fs, docker, json) {
     var result = {};
     result["success"] = 0;
 
-    var obox = req.params.oboxName;//oboxName
+    var obox = req.params.oboxName; //oboxName
     json.getOboxByName(fs, file_path, obox, function(err, data) {
 
       if (!data.success)
