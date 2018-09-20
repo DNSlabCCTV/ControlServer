@@ -4,13 +4,7 @@
 			"host": "127.0.0.1",
 			"port": "4243",
 			"container": {
-				"test": {
-					"type": "kerberos",
-					"webport": "80",
-					"camera": {
-						"test": "http://127.0.0.1:8889"
-					}
-				}
+			
 			}
 		},
 		"KKU": {
