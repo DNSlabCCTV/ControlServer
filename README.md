@@ -2,12 +2,34 @@
 
 ## Testbed ControllServer
 
-## APIs
-
 ### Explanation
 
 RESTful API을 통하여 추가 하고 싶은 IPcamera를 원하는 컨테이너와 연동하여 ControllServer에서 실행하고 제거 할 수 있습니다.
+
 또한 ControllServer에서 스트리밍 중인 IPCamera의 구성 및 HTTP Proxy Streaming url을 알수 있습니다.
+
+추가된 컨테이너와 모니터의 데이터는 아래와 같은 데이터 형식으로 저장 됩니다.
+'Obox' Key에는 현재 추가된 Obox데이터 값들을 배열로 저장합니다.
+obox데이터는 'name', 'container'로 이루어 져있고 name은 해당 obox의 이름, container는 실행 중인 컨테이너의 정보를 리턴합니다.
+'container'의 값은 'name', 'type', 'webport', "camera" 값을 가지고 있고 각 컨테이너의 이름, openCCTV 어플리케이션 type, 사용중인 webport, 등록된 camera를 가지고 있다.
+'camera'값은 배열 형식으로 컨테이너에 연동된 Ipcamera의 정보를 가지고 있다. 
+```
+{
+  "Obox": [{
+    "name": "JNU",
+    "container": [{
+      "name": "containerName",
+      "type": "container type",
+      "webport": "port the container using",
+      "camera": [{
+          "name": "cameraName",
+          "url": "http proxy url"
+        }
+      ]
+    }]
+  }]
+}
+```
 
 ### Feaures
 
@@ -20,7 +42,50 @@ API의 결과는 Json 형식으로 전달 되고 Json 데이터는 'success'와 
 
 ### Each API
 
-#### 1. GET /getCamera
+#### 1. GET /Data
+
+- 저장된 Json 파일의 Obox배열을 리턴합니다.
+
+```
+{
+    "success": 1,
+    "result": [
+        {
+            "name": "JNU",
+            "container": [
+                {
+                    "name": "containerName",
+                    "type": "type",
+                    "webport": "80",
+                    "camera": [
+                        {
+                            "name": "cameraName",
+                            "url": "http proxy url"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+```
+
+#### 2. GET /getOboxList
+
+- 추가된 Obox의 이름을 배열로 리턴합니다.
+
+```
+{
+    "success": 1,
+    "result": [
+        "JNU"
+    ]
+}
+```
+
+#### 3. GET /getCamera
+
+- 현재 모니터링 중인 카메라의 정보를 Obox 별로 리턴합니다.
 
 ```
 {
@@ -37,5 +102,37 @@ API의 결과는 Json 형식으로 전달 되고 Json 데이터는 'success'와 
             ]
         }
     ]
+}
+```
+
+#### 4. GET /getCameraByObox/:oboxName
+
+- Path에 oboxName을 입력 하므로써 해당 Obox에 연결된 camera의 데이터를 배열 형식으로 리턴합니다.
+
+```
+{
+    "success": 1,
+    "result": [
+        {
+            "name": "cameraName",
+            "url": "http proxy url",
+            "type": "type"
+        }
+    ]
+}
+```
+
+#### 4. GET /getCameraByObox/:oboxName
+
+- Path에 oboxName과 cameraName을 입력 함으로써 해당 Obox내의 camerName을 가지고 있는 카메라의 데이터를 리턴한다.
+
+```
+{
+    "success": 1,
+    "result": {
+        "name": "cameraName",
+        "url": "http proxy url",
+        "type": "type"
+    }
 }
 ```
