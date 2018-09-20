@@ -12,7 +12,7 @@ RESTful API을 통하여 추가 하고 싶은 IPcamera를 원하는 컨테이너
 'Obox' Key에는 현재 추가된 Obox데이터 값들을 배열로 저장합니다.
 obox데이터는 'name', 'container'로 이루어 져있고 name은 해당 obox의 이름, container는 실행 중인 컨테이너의 정보를 리턴합니다.
 'container'의 값은 'name', 'type', 'webport', "camera" 값을 가지고 있고 각 컨테이너의 이름, openCCTV 어플리케이션 type, 사용중인 webport, 등록된 camera를 가지고 있다.
-'camera'값은 배열 형식으로 컨테이너에 연동된 Ipcamera의 정보를 가지고 있다. 
+'camera'값은 배열 형식으로 컨테이너에 연동된 Ipcamera의 정보를 가지고 있다.
 ```
 {
   "Obox": [{
@@ -122,7 +122,7 @@ API의 결과는 Json 형식으로 전달 되고 Json 데이터는 'success'와 
 }
 ```
 
-#### 4. GET /getCameraByObox/:oboxName
+#### 5. GET /getCameraByOboxAndCamera/:oboxName/:cameraName
 
 - Path에 oboxName과 cameraName을 입력 함으로써 해당 Obox내의 camerName을 가지고 있는 카메라의 데이터를 리턴한다.
 
