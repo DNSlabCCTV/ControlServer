@@ -17,13 +17,12 @@ API의 결과는 Json 형식으로 전달 되고 Json 데이터는 'success'와 
 
 'result' 데이터는 요청 데이터를 배열 형식으로 값을 저장 하고 있습니다.
 
-###
 
-###Each API
+### Each API
 
 #### 1. /getCamera
 
-'''json
+'''
 {
     "success": 1,
     "result": [
