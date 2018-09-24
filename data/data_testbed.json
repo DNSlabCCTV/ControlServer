@@ -1,0 +1,33 @@
+{
+  "Obox": [{
+    "name": "JNU",
+    "container": [{
+        "name": "kerberos1",
+        "type": "kerberos",
+        "webport": "80",
+        "camera": [{
+          "name": "dnslab",
+          "url": "http://168.131.148.45:20001/"
+        }]
+      },
+      {
+        "name": "kerberos2",
+        "type": "kerberos",
+        "webport": "81",
+        "camera": [{
+          "name": "dnslab2",
+          "url": "http://168.131.148.45:20002/"
+        }]
+      },
+      {
+        "name": "zoneminder1",
+        "type": "zoneminder",
+        "webport": "8878",
+        "camera": [{
+          "name": "dnslab3",
+          "url": "http://168.131.148.45:20021/zm/cgi-bin/nph-zms?mode=jpeg&monitor=23&scale=100&maxfps=30&buffer=1000"
+        }]
+      }
+    ]
+  }]
+}
