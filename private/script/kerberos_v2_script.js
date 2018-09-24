@@ -2,19 +2,24 @@ var request = require('request'); //http request를 위한 모듈
 
 /*
 kerberosSetup() - kerberos 컨테이너의 IPcamera url을 API를 통하여 설정
+
 params
+
 host - kerberos host
 ports - web, stream ports
 cameraName - cameraName
 rtspUrl - IPcamera rtsp url
 */
-exports.kerberosSetup = function(host, ports, cameraName, rtspUrl, callback) {
+exports.kerberosSetup = function(host, parameter, cameraName, rtspUrl, callback) {
   /*
   kerberos는 컨테이너 하나당 하나의 카메라를 설정한다.
   */
+
+
   url_ = rtspUrl[0];
-  webPort = ports[0];
-  streamPort = ports[1];
+  webPort = parameter.HostConfig.PortBindings["80/tcp"][0].HostPort;
+  streamPort = parameter.HostConfig.PortBindings["8889/tcp"][0].HostPort;
+
   var context = this
   //초기 계정 설정
   context.firstSetup(host, webPort, function(firstResult) {
@@ -22,14 +27,13 @@ exports.kerberosSetup = function(host, ports, cameraName, rtspUrl, callback) {
     context.login(host, webPort, function(cookie) {
       //IPcamera url 설정
       context.urlSetup(host, webPort, cookie, url_, function(result, data) {
-        configData = {};
-        camera = {};
-        camera[cameraName] = "http://" + host + ":" + streamPort;
-        configData["type"] = "kerberos";
-        configData["webport"] = webPort;
-        configData["camera"] = camera;
+        camera = [];
+        cameraJson = {};
+        cameraJson["name"] = cameraName[0];
+        cameraJson["url"] = "http://" + host + ":" + streamPort;
+        camera.push(cameraJson);
         //해당 컨테이너의 json 데이터 생성
-        return callback(result, configData);
+        return callback(result, camera);
       });
     });
   });
@@ -83,7 +87,7 @@ exports.firstSetup = function(host, port, callback) {
 
   request(options, function(error, response, body) {
     if(error){
-      console.log(error);
+      console.log("Error in firstSetup = " + error);
       //컨테이너 실행되고 서버 실행의 시간이 있다.
       return context.firstSetup(host, port, callback);
     }else{
@@ -96,7 +100,9 @@ exports.firstSetup = function(host, port, callback) {
 
 /*
 urlSetup() - 컨테이너의 IPCamer setting을 하는 함수
+
 paramas
+
 host - kerberos host
 port - kerberos webport
 cookie - login cookie

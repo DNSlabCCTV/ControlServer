@@ -1,3 +1,4 @@
+var fs = require("fs")
 /*
   data_script.js - json 데이터를 조회, 수정, 추가, 제거를 위한 함수들을 정의
 */
@@ -5,7 +6,7 @@
 /*
 getData() - json 데이터 전체를 리턴한다.
 */
-exports.getData = function(fs, file, callback) {
+exports.getData = function(file, callback) {
   fs.readFile(__dirname + "/../../" + file, 'utf8', function(err, data) {
     result = {
       "success": 1
@@ -23,8 +24,8 @@ exports.getData = function(fs, file, callback) {
 /*
 getOboxList() - obox이름을 json 형식으로 리턴한다.
 */
-exports.getOboxList = function(fs, file, callback) {
-  this.getData(fs, file, function(err, data) {
+exports.getOboxList = function(file, callback) {
+  this.getData(file, function(err, data) {
     result = {
       "success": 1
     };
@@ -45,8 +46,8 @@ exports.getOboxList = function(fs, file, callback) {
 /*
 getCamera() - 모든 Obox 설정된 모니터를 camera_name:url 형식으로 리턴한다.
 */
-exports.getCamera = function(fs, file, callback) {
-  this.getData(fs, file, function(err, data) {
+exports.getCamera = function(file, callback) {
+  this.getData(file, function(err, data) {
 
     result = {
       "success": 1
@@ -83,8 +84,8 @@ exports.getCamera = function(fs, file, callback) {
   });
 };
 
-exports.getCameraByObox = function(fs, file_path, oboxName, callback) {
-  this.getCamera(fs, file_path, function(err, data) {
+exports.getCameraByObox = function(file_path, oboxName, callback) {
+  this.getCamera(file_path, function(err, data) {
     result = {
       "success": 1
     };
@@ -114,8 +115,8 @@ exports.getCameraByObox = function(fs, file_path, oboxName, callback) {
   });
 };
 
-exports.getCameraByOboxAndCameraName = function(fs, file_path, oboxName, cameraName, callback) {
-  this.getCameraByObox(fs, file_path, oboxName, function(err, data) {
+exports.getCameraByOboxAndCameraName = function(file_path, oboxName, cameraName, callback) {
+  this.getCameraByObox(file_path, oboxName, function(err, data) {
     result = {
       "success": 1
     };
@@ -142,4 +143,67 @@ exports.getCameraByOboxAndCameraName = function(fs, file_path, oboxName, cameraN
     return callback(err, result);
 
   });
+};
+
+
+exports.addContainer = function(file_path, oboxName, containerJson, callback) {
+  this.getData(file_path, function(err, data) {
+
+    result = data.result;
+
+    for (i = 0; i < result.length; i++) {
+      if (result[i].name == oboxName) {
+        containerList = result[i].container
+        containerList.push(containerJson);
+      }
+    }
+
+    data = {
+      "Obox": result
+    };
+
+    fs.writeFile(__dirname + "/../../" + file_path, JSON.stringify(data, null, '\t'), "utf8", function(err, data) {
+      result = {
+        "success": 1
+      };
+      callback(err, result); // 추가 성공
+    });
+
+  });
+};
+
+exports.deleteCamera = function(file_path, oboxName, cameraName, type, callback){
+
+  switch (type) {
+    case "kerberos":
+
+      break;
+    default:
+
+  }
+};
+
+exports.deleteContainer = function(file_path, oboxName, containerName, callback){
+
+};
+
+exports.makeContainerJsonData = function(containerName, type, webPort, cameraNames, cameraUrls) {
+
+  containerJson = {};
+  containerJson["name"] = containerName;
+  containerJson["type"] = type;
+  containerJson["webport"] = webPort;
+  cameraArray = [];
+
+  for (i = 0; i < cameraNames.length; i++) {
+    cameraJson = {};
+    cameraJson["name"] = cameraNames[i];
+    cameraJson["url"] = cameraUrls[i];
+    cameraArray.push(cameraJson);
+  }
+
+  containerJson["camera"] = cameraArray;
+
+  return containerJson;
+
 };

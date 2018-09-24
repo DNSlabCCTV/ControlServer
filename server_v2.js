@@ -2,9 +2,7 @@ var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
 var session = require('express-session');
-var fs = require("fs")
-var docker = require(__dirname + "/private/script/docker_script");
-var json = require(__dirname + "/private/script/data_v2_script");
+
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
@@ -29,4 +27,4 @@ app.use(session({
 }));
 
 
-var router = require('./router/main_v2')(app, fs, docker, json);
+var router = require('./router/main_v2')(app);
