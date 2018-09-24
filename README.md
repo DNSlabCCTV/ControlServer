@@ -136,3 +136,23 @@ API의 결과는 Json 형식으로 전달 되고 Json 데이터는 'success'와 
     }
 }
 ```
+
+#### 6. POST /createContainer
+
+- 컨테이너 생성을 하고 해당 컨테이너에 ipcamera의 rtspurl을 등록시키는 함수입니다.
+- v2에서는 kerberos만을 지원합니다.
+- kerberos의 경우 하나의 카메라만 등록 할 수 있습니다.
+
+
+- Parameter 정의
+- - 1. image : image키의 값은 'kerberos', 'zoneminder', 'shinobi'를 사용할 수 있습니다.
+- - 2. cameras : cameras키의 값은 사용자가 입력한 카메라 이름을 담은 Array형식 값이여야 합니다.
+- - 3. rtsp : rtsp키의 값은 각 모니터에 등록될 ipcamera의 rtsp url을 담은 Array형식의 값이여야 합니다.
+- - 4. obox : obox키의 값은 등록 할 obox의 이름입니다.
+
+```
+{
+    "success": 1,
+    "result": "making container"
+}
+```
