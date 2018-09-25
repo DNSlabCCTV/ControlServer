@@ -172,20 +172,78 @@ exports.addContainer = function(file_path, oboxName, containerJson, callback) {
   });
 };
 
-exports.deleteCamera = function(file_path, oboxName, cameraName, type, callback){
-
-  switch (type) {
-    case "kerberos":
-
-      break;
-    default:
-
-  }
-};
-
-exports.deleteContainer = function(file_path, oboxName, containerName, callback){
+exports.deleteCamera = function(file_path, oboxName, cameraName, callback) {
 
 };
+
+exports.deleteContainer = function(file_path, oboxName, containerName, callback) {
+  this.getData(file_path, function(err, data_) {
+    oboxList = data_.result;
+
+    out:
+      for (i = 0; i < oboxList.length; i++) {
+        if (oboxList[i].name == oboxName) {
+          for (j = 0; j < oboxList[i].container.length; j++) {
+            if (oboxList[i].container[j].name == containerName) {
+              break out;
+            }
+          }
+        }
+      }
+
+    oboxList[i].container.splice(j, 1);
+
+    data = {
+      "Obox": oboxList
+    };
+
+
+
+    fs.writeFile(__dirname + "/../../" + file_path, JSON.stringify(data, null, '\t'), "utf8");
+
+  });
+};
+
+exports.getContainerName = function(file_path, oboxName, cameraName, callback) {
+  this.getData(file_path, function(err, data) {
+
+    result = {
+      "delete": "container"
+    };
+
+    outer:
+      for (i = 0; i < data.result.length; i++) {
+        if (oboxName == data.result[i].name) {
+          containerArray = data.result[i].container;
+          for (j = 0; j < containerArray.length; j++) {
+            for (k = 0; k < containerArray[j].camera.length; k++) {
+              if (containerArray[j].camera[k].name == cameraName)
+                break outer;
+            }
+          }
+        }
+      }
+
+    type = containerArray[j].type;
+    result["obox"] = oboxName;
+    result["type"] = type;
+    result["name"] = containerArray[j].name;
+
+    switch (type) {
+      case "zoneminder":
+        if (containerArray[j].camera.length > 1) {
+          result["delete"] = "camera";
+          result["name"] = cameraName;
+        }
+        break;
+    }
+
+    callback(result);
+
+  });
+};
+
+
 
 exports.makeContainerJsonData = function(containerName, type, webPort, cameraNames, cameraUrls) {
 

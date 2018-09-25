@@ -57,14 +57,16 @@ module.exports = function(app) {
   */
   app.post('/createContainer', function(req, res) {
 
-    var result  = { "success" : 1 };
+    var result = {
+      "success": 1
+    };
 
     var image = req.body.image; //이미지 이름 kerberos, shinobi, zoneminder
     var cameras = req.body.cameras; //cameras 카메라 이름 배열
     var rtsp = req.body.rtsp; //rtsp주소 배열
     var obox = req.body.obox; //컨테이너를 생성할 obox
 
-    if(!image || !cameras || !rtsp || !obox){
+    if (!image || !cameras || !rtsp || !obox) {
 
       result["success"] = 0;
       result["result"] = "has no input";
@@ -76,13 +78,11 @@ module.exports = function(app) {
 
     res.json(result);
 
-    console.log("reach here");
-
-    docker.makeCCTVContainer(image, cameras, rtsp, function(data){
+    docker.makeCCTVContainer(image, cameras, rtsp, function(data) {
       containerJson = data.result;
       //data.json에 컨테이너와 카메라 추가
       json.addContainer(file_path, obox, containerJson, function(err, result) {
-          console.log(result);
+        console.log(result);
       });
     });
   });
@@ -90,4 +90,18 @@ module.exports = function(app) {
   /*
   DELETE /deleteCamera/:oboxName/:cameraName
   */
+  app.delete('/deleteCamera/:oboxName/:cameraName', function(req, res) {
+    var oboxName = req.params.oboxName;
+    var cameraName = req.params.cameraName;
+
+    json.getContainerName(file_path, oboxName, cameraName, function(result) {
+      res.json(result);
+      result["path"] = file_path;
+      docker.deleteContainer(result, function(result) {
+        //console.log(result);
+      });
+
+    });
+
+  });
 }

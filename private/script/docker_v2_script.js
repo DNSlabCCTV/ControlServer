@@ -1,7 +1,39 @@
 var Docker = require('dockerode'); //docker remoteapi를 사용할 수 있는 Nodejs Module
 var DOCKER_SOCKET_PATH = "/var/run/docker.sock";
 var kerberos = require(__dirname + "/kerberos_v2_script"); //kerberos 컨테이너 실행을위한 함수 모듈
-var DOCKER_HOST = "10.0.2.15";
+var json = require(__dirname + "/data_v2_script");
+
+exports.deleteContainer = function(data, callback) {
+
+  var dockerHost = new Docker({
+    socketPath: DOCKER_SOCKET_PATH
+  });
+
+  if (data.delete == "container") {
+    var container = dockerHost.getContainer(data.name);
+
+    container.stop(function(err, data) {
+      console.log(err);
+      container.remove(function(err, data) {
+        if(err){
+          console.log("is err");
+        }
+        console.log(err);
+        return callback(err);
+      });
+    });
+
+
+    json.deleteContainer(data.path, data.obox, data.name);
+
+  } else if (data.delete == "camera") {
+    /*
+    zoneminder, shinobi camera delete
+    */
+    json.deleteCamera(data.path, data.obox, data.name);
+  }
+
+};
 
 exports.makeCCTVContainer = function(image, cameraNames, rtspUrl, callback) {
   result = {
@@ -21,48 +53,45 @@ exports.makeCCTVContainer = function(image, cameraNames, rtspUrl, callback) {
     }).then(function(container) {
 
       container.inspect(function(err, data) {
-        containerJson["name"] = data.Id;
-      });
 
-      /*
-        Todo
-        Zoneminder, Shinobi 컨테이너에 따른 자동화 함수 구현
-      */
+        containerJson["name"] = data.Name.substring(1);
+        /*
+          Todo
+          Zoneminder, Shinobi 컨테이너에 따른 자동화 함수 구현
+        */
 
-      var ipAddresses = [];
+        var ipAddresses = [];
 
-      var interfaces = require('os').networkInterfaces();
+        var interfaces = require('os').networkInterfaces();
 
-      for (var devName in interfaces) {
-        var iface = interfaces[devName];
-        for (var i = 0; i < iface.length; i++) {
-          var alias = iface[i];
-          if (devName != "docker0" && alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
-            ipAddresses.push(alias.address);
+        for (var devName in interfaces) {
+          var iface = interfaces[devName];
+          for (var i = 0; i < iface.length; i++) {
+            var alias = iface[i];
+            if (devName != "docker0" && alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
+              ipAddresses.push(alias.address);
+            }
           }
         }
-      }
 
-      host = ipAddresses[0]; //ip얻기
+        host = ipAddresses[0]; //ip얻기
 
-      //실행된 kerberos의 ipcamera url 설정
-      kerberos.kerberosSetup(host, parameter, cameraNames, rtspUrl, function(result_, data) {
-        //카메라 설정 실패시
-        if (result_) {
-          result["success"] = 0;
-          return res.send(false);
-          /*
-            컨테이너 제거 함수 추가
-          */
-        }
-        containerJson["camera"] = data;
-        result["result"] = containerJson;
+        //실행된 kerberos의 ipcamera url 설정
+        kerberos.kerberosSetup(host, parameter, cameraNames, rtspUrl, function(result_, data) {
+          //카메라 설정 실패시
+          if (result_) {
+            result["success"] = 0;
+            return res.send(false);
+            /*
+              컨테이너 제거 함수 추가
+            */
+          }
+          containerJson["camera"] = data;
+          result["result"] = containerJson;
 
-        return callback(result);
-        // //data.json에 컨테이너와 카메라 추가
-        // json.addContainer(fs, file_path, obox, container_name, data, function(err, result) {
-        //   return res.send(true); // 컨테이너 생성, 실행 및 json데이터 추가 성공;
-        // });
+          return callback(result);
+        });
+
       });
 
     }).catch(function(err) {
