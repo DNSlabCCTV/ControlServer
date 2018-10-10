@@ -166,6 +166,7 @@ exports.addContainer = function(file_path, oboxName, containerJson, callback) {
       result = {
         "success": 1
       };
+      
       callback(err, result); // 추가 성공
     });
 

@@ -13,17 +13,6 @@
 							"url": "http proxy url"
 						}
 					]
-				},
-				{
-					"name": "d0e4394b58ff518b50eab50e8905e9cbe154beaa09bc4f6d235070371af07a84",
-					"type": "kerberos",
-					"webport": "8239",
-					"camera": [
-						{
-							"name": "test",
-							"url": "http://10.0.2.15:8361"
-						}
-					]
 				}
 			]
 		}

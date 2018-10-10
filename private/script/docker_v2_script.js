@@ -1,6 +1,6 @@
 var Docker = require('dockerode'); //docker remoteapi를 사용할 수 있는 Nodejs Module
 var DOCKER_SOCKET_PATH = "/var/run/docker.sock";
-var kerberos = require(__dirname + "/kerberos_v2_script"); //kerberos 컨테이너 실행을위한 함수 모듈
+var kerberos = require(__dirname + "/cameraSetup_script/kerberos_v2_script"); //kerberos 컨테이너 실행을위한 함수 모듈
 var json = require(__dirname + "/data_v2_script");
 
 exports.deleteContainer = function(data, callback) {
@@ -15,7 +15,7 @@ exports.deleteContainer = function(data, callback) {
     container.stop(function(err, data) {
       console.log(err);
       container.remove(function(err, data) {
-        if(err){
+        if (err) {
           console.log("is err");
         }
         console.log(err);
@@ -55,11 +55,6 @@ exports.makeCCTVContainer = function(image, cameraNames, rtspUrl, callback) {
       container.inspect(function(err, data) {
 
         containerJson["name"] = data.Name.substring(1);
-        /*
-          Todo
-          Zoneminder, Shinobi 컨테이너에 따른 자동화 함수 구현
-        */
-
         var ipAddresses = [];
 
         var interfaces = require('os').networkInterfaces();
@@ -68,6 +63,7 @@ exports.makeCCTVContainer = function(image, cameraNames, rtspUrl, callback) {
           var iface = interfaces[devName];
           for (var i = 0; i < iface.length; i++) {
             var alias = iface[i];
+            //ipAddresses를 이더넷카드로 부터 받는다.
             if (devName != "docker0" && alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
               ipAddresses.push(alias.address);
             }
@@ -82,9 +78,6 @@ exports.makeCCTVContainer = function(image, cameraNames, rtspUrl, callback) {
           if (result_) {
             result["success"] = 0;
             return res.send(false);
-            /*
-              컨테이너 제거 함수 추가
-            */
           }
           containerJson["camera"] = data;
           result["result"] = containerJson;
@@ -95,10 +88,6 @@ exports.makeCCTVContainer = function(image, cameraNames, rtspUrl, callback) {
       });
 
     }).catch(function(err) {
-
-      /*
-      todo : 에러처리 ex) 컨테이너 삭제
-      */
       result["success"] = 0;
       return callback(result);
     });
@@ -205,7 +194,7 @@ exports.makeConfig = function(image, dockerHost, callback) {
   //OpenCCTV별 이미지 값
   var IMAGES = {
     "kerberos": "kerberos/kerberos",
-    "shinobi": "todo",
+    "shinobi": "dlandon/zoneminder",
     "zoneminder": "todo"
   };
 
@@ -215,13 +204,8 @@ exports.makeConfig = function(image, dockerHost, callback) {
       "80/tcp": {},
       "8889/tcp": {}
     },
-    "shinobi": {
-      "todo/tcp": {},
-      "todo/tcp": {}
-    },
     "zoneminder": {
-      "todo/tcp": {},
-      "todo/tcp": {}
+      "80/tcp": {}
     }
   };
 
@@ -237,22 +221,9 @@ exports.makeConfig = function(image, dockerHost, callback) {
         }]
       }
     },
-    "shinobi": {
-      "PortBindings": {
-        "todo/tcp": [{
-          "HostPort": ""
-        }],
-        "todo/tcp": [{
-          "HostPort": ""
-        }]
-      }
-    },
     "zoneminder": {
       "PortBindings": {
-        "todo/tcp": [{
-          "HostPort": ""
-        }],
-        "todo/tcp": [{
+        "80/tcp": [{
           "HostPort": ""
         }]
       }
@@ -274,18 +245,9 @@ exports.makeConfig = function(image, dockerHost, callback) {
           HOSTCONFIG[image].PortBindings["8889/tcp"][0].HostPort = streamPort;
           containerJson["webport"] = webPort;
           break;
-        case "shinobi":
-          // webPort = ports[0];
-          // streamPort = ports[1];
-          // HOSTCONFIG[image].PortBindings["80/tcp"][0].HostPort = webPort;
-          // HOSTCONFIG[image].PortBindings["8889/tcp"][0].HostPort = webPort;
-
-          break;
         case "zoneminder":
-          // webPort = ports[0];
-          // streamPort = ports[1];
-          // HOSTCONFIG[image].PortBindings["80/tcp"][0].HostPort = webPort;
-          // HOSTCONFIG[image].PortBindings["8889/tcp"][0].HostPort = webPort;
+          webPort = ports[0];
+          HOSTCONFIG[image].PortBindings["80/tcp"][0].HostPort = webPort;
           break;
       }
 
