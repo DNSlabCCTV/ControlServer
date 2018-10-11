@@ -27,9 +27,12 @@ exports.deleteContainer = function(data, callback) {
 
   } else if (data.delete == "camera") {
     /*
-    zoneminder, shinobi camera delete
+    zoneminder
     */
-    json.deleteCamera(data.path, data.obox, data.name);
+    //openCCTV.deleteCamer(data.obox)
+    console.log(data);
+
+    //json.deleteCamera(data.path, data.obox, data.name);
   }
 
 };

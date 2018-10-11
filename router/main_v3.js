@@ -92,13 +92,27 @@ module.exports = function(app) {
   DELETE /deleteCamera/:oboxName/:cameraName
   */
   app.delete('/deleteCamera/:oboxName/:cameraName', function(req, res) {
+
+    var send_result = {
+      "success": 1
+    };
+
     var oboxName = req.params.oboxName;
     var cameraName = req.params.cameraName;
 
-    json.getContainerName(file_path, oboxName, cameraName, function(result) {
-      res.json(result);
-      result["path"] = file_path;
-      docker.deleteContainer(result, function(result) {
+    json.getContainerName(file_path, oboxName, cameraName, function(get_result) {
+
+      if(!get_result.success){
+        send_result.success = 0;
+        send_result["result"] = "there is no camera";
+        return res.json(send_result);
+      }
+
+      send_result["result"] = get_result;
+      res.json(send_result);
+
+      get_result["path"] = file_path;
+      docker.deleteContainer(get_result, function(function_result) {
         //console.log(result);
       });
 

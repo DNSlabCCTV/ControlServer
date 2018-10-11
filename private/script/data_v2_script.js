@@ -166,7 +166,7 @@ exports.addContainer = function(file_path, oboxName, containerJson, callback) {
       result = {
         "success": 1
       };
-      
+
       callback(err, result); // 추가 성공
     });
 
@@ -207,23 +207,30 @@ exports.deleteContainer = function(file_path, oboxName, containerName, callback)
 
 exports.getContainerName = function(file_path, oboxName, cameraName, callback) {
   this.getData(file_path, function(err, data) {
-
     result = {
-      "delete": "container"
-    };
+      "success":0,
+      "delete": "no camera"
+    }
 
     outer:
       for (i = 0; i < data.result.length; i++) {
-        if (oboxName == data.result[i].name) {
-          containerArray = data.result[i].container;
-          for (j = 0; j < containerArray.length; j++) {
+        if (oboxName == data.result[i].name) { //해당 obox찾
+          containerArray = data.result[i].container; //각 obox의 컨테이너
+          for (j = 0; j < containerArray.length; j++) { //Container의 카메라확인
             for (k = 0; k < containerArray[j].camera.length; k++) {
-              if (containerArray[j].camera[k].name == cameraName)
+              if (containerArray[j].camera[k].name == cameraName) {
+                result.success = 1;
+                result.delete = "container";
                 break outer;
+              }
+
             }
           }
         }
       }
+
+    if(!result.success)
+      return callback(result);
 
     type = containerArray[j].type;
     result["obox"] = oboxName;
