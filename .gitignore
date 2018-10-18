@@ -1,3 +1,3 @@
 #ignore the ftp file
-./.ftpconfig
-./data/sample_data.json
+.ftpconfig
+data/data_testbed.json
