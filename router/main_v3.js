@@ -1,9 +1,9 @@
 var docker = require(__dirname + "/../private/script/docker_v3_script");
 var json = require(__dirname + "/../private/script/data_v2_script");
-var file_path = "data/data_v2.json" //data 파일의 주소 (프로젝트 폴더를 기준으로)
+var file_path = "data/data_testbed.json" //data 파일의 주소 (프로젝트 폴더를 기준으로)
 
 //Server의 라우팅 메소드
-module.exports = function(app) {
+module.exports = function(host_address, app) {
   /*
     타대학에서의 HTTP Proxy URL을 받기위한 Restful API
   */
@@ -78,7 +78,7 @@ module.exports = function(app) {
 
     res.json(result);
 
-    docker.makeCCTVContainer(image, cameras, rtsp, function(data) {
+    docker.makeCCTVContainer(host_address, image, cameras, rtsp, function(data) {
       containerJson = data.result;
       //data.json에 컨테이너와 카메라 추가
       json.addContainer(file_path, obox, containerJson, function(err, result) {

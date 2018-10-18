@@ -9,8 +9,6 @@ exports.deleteContainer = function(data, callback) {
     socketPath: DOCKER_SOCKET_PATH
   });
 
-
-
   if (data.delete == "container") {
     console.log("delete container");
     var container = dockerHost.getContainer(data.name);
@@ -39,7 +37,7 @@ exports.deleteContainer = function(data, callback) {
 
 };
 
-exports.makeCCTVContainer = function(image, cameraNames, rtspUrls, callback) {
+exports.makeCCTVContainer = function(host_address, image, cameraNames, rtspUrls, callback) {
   result = {
     "success": 1
   };
@@ -60,25 +58,8 @@ exports.makeCCTVContainer = function(image, cameraNames, rtspUrls, callback) {
 
         containerJson["name"] = data.Name.substring(1);
 
-        /**
-        이더넷 카드
-        **/
-        var ipAddresses = [];
 
-        var interfaces = require('os').networkInterfaces();
-
-        for (var devName in interfaces) {
-          var iface = interfaces[devName];
-          for (var i = 0; i < iface.length; i++) {
-            var alias = iface[i];
-            //ipAddresses를 이더넷카드로 부터 받는다.
-            if (devName != "docker0" && alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
-              ipAddresses.push(alias.address);
-            }
-          }
-        }
-
-        host = ipAddresses[0]; //ip얻기
+        host = host_address; //ip얻기
 
         openCCTV.cameraSetup(image, host, parameter, cameraNames, rtspUrls).then(function(data) {
           containerJson["camera"] = data;
