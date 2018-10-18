@@ -9,11 +9,13 @@ exports.deleteContainer = function(data, callback) {
     socketPath: DOCKER_SOCKET_PATH
   });
 
+
+
   if (data.delete == "container") {
+    console.log("delete container");
     var container = dockerHost.getContainer(data.name);
 
     container.stop(function(err, data) {
-      console.log(err);
       container.remove(function(err, data) {
         if (err) {
           console.log("is err");
@@ -30,7 +32,7 @@ exports.deleteContainer = function(data, callback) {
     zoneminder
     */
     //openCCTV.deleteCamer(data.obox)
-    console.log(data);
+    console.log("delete camera");
 
     //json.deleteCamera(data.path, data.obox, data.name);
   }

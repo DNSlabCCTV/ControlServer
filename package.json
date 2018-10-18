@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "dependencies": {
     "body-parser": "~1.14.2",
+    "cors": "^2.8.4",
     "dockerode": "~2.5.5",
     "ejs": "~2.4.1",
     "express": "~4.13.1",

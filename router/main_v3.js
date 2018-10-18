@@ -110,7 +110,6 @@ module.exports = function(app) {
 
       send_result["result"] = get_result;
       res.json(send_result);
-
       get_result["path"] = file_path;
       docker.deleteContainer(get_result, function(function_result) {
         //console.log(result);
