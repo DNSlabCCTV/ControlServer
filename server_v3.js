@@ -34,11 +34,4 @@ request('http://api.ipify.org', function(error, response, body) {
 
   var router = require('./router/main_v3')(host_address, app);
 
-  io.on('connect', function(socket) {
-    console.log('클라이언트 접속');
-    socket.on('disconnect', function() {
-      console.log('클라이언트 접속 종료');
-    });
-  });
-
 });
