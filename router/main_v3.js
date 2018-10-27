@@ -3,7 +3,7 @@ var json = require(__dirname + "/../private/script/data_v2_script");
 var file_path = "data/data_testbed.json" //data 파일의 주소 (프로젝트 폴더를 기준으로)
 
 //Server의 라우팅 메소드
-module.exports = function(app) {
+module.exports = function(host_address, app) {
   /*
     타대학에서의 HTTP Proxy URL을 받기위한 Restful API
   */
@@ -15,6 +15,7 @@ module.exports = function(app) {
   app.get('/Data', function(req, res) {
     json.getData(file_path, function(err, data) {
       res.json(data);
+
     });
   });
 
@@ -74,15 +75,19 @@ module.exports = function(app) {
       return res.json(result);
 
     }
+
     result["result"] = "making container";
 
     res.json(result);
 
-    docker.makeCCTVContainer(image, cameras, rtsp, function(data) {
+    docker.makeCCTVContainer(host_address, image, cameras, rtsp, function(data) {
       containerJson = data.result;
       //data.json에 컨테이너와 카메라 추가
       json.addContainer(file_path, obox, containerJson, function(err, result) {
         console.log(result);
+
+        req.app.io.emit('success', "success");
+
       });
 
     });
@@ -110,12 +115,15 @@ module.exports = function(app) {
 
       send_result["result"] = get_result;
       res.json(send_result);
-
       get_result["path"] = file_path;
+
+      console.log(get_result);
+      /*
       docker.deleteContainer(get_result, function(function_result) {
         //console.log(result);
+        req.app.io.emit('success', "success");
       });
-
+      */
     });
 
   });
