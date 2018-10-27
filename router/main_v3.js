@@ -15,6 +15,7 @@ module.exports = function(host_address, app) {
   app.get('/Data', function(req, res) {
     json.getData(file_path, function(err, data) {
       res.json(data);
+
     });
   });
 
@@ -55,7 +56,7 @@ module.exports = function(host_address, app) {
 
   Shinobi, Zoneminder는 컨테이너 생성, 자동화 부분을 함수를 추가 개발 하여야 한다.
   */
-  app.post('/createContainer', function(req, res) {
+  app.post('/createContainer', function(req, res, io) {
 
     var result = {
       "success": 1
@@ -74,6 +75,7 @@ module.exports = function(host_address, app) {
       return res.json(result);
 
     }
+
     result["result"] = "making container";
 
     res.json(result);
@@ -83,6 +85,9 @@ module.exports = function(host_address, app) {
       //data.json에 컨테이너와 카메라 추가
       json.addContainer(file_path, obox, containerJson, function(err, result) {
         console.log(result);
+
+        req.app.io.emit('success', "success");
+
       });
 
     });
@@ -102,7 +107,7 @@ module.exports = function(host_address, app) {
 
     json.getContainerName(file_path, oboxName, cameraName, function(get_result) {
 
-      if(!get_result.success){
+      if (!get_result.success) {
         send_result.success = 0;
         send_result["result"] = "there is no camera";
         return res.json(send_result);
@@ -111,10 +116,14 @@ module.exports = function(host_address, app) {
       send_result["result"] = get_result;
       res.json(send_result);
       get_result["path"] = file_path;
+
+      console.log(get_result);
+      /*
       docker.deleteContainer(get_result, function(function_result) {
         //console.log(result);
+        req.app.io.emit('success', "success");
       });
-
+      */
     });
 
   });

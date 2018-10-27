@@ -22,7 +22,6 @@ exports.deleteContainer = function(data, callback) {
       });
     });
 
-
     json.deleteContainer(data.path, data.obox, data.name);
 
   } else if (data.delete == "camera") {

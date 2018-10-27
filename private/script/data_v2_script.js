@@ -242,6 +242,7 @@ exports.getContainerName = function(file_path, oboxName, cameraName, callback) {
         if (containerArray[j].camera.length > 1) {
           result["delete"] = "camera";
           result["name"] = cameraName;
+          result["webport"] = containerArray[j].webport;
         }
         break;
     }

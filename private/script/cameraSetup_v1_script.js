@@ -50,4 +50,8 @@ exports.cameraSetup = function(image, host, parameter, cameraNames, rtspUrls) {
 
     }
   });
-}
+};
+
+exports.deleteZoneminderCamera = function(image, host, parameter, cameraNames, rtspUrls) {
+
+};
