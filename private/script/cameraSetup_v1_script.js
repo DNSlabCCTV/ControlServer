@@ -39,7 +39,7 @@ exports.cameraSetup = function(image, host, parameter, cameraNames, rtspUrls) {
               );
             }
 
-            Promise.all(requestArray).then(function(){
+            Promise.all(requestArray).then(function() {
               resolve(cameraArray);
             });
 
@@ -52,6 +52,12 @@ exports.cameraSetup = function(image, host, parameter, cameraNames, rtspUrls) {
   });
 };
 
-exports.deleteZoneminderCamera = function(image, host, parameter, cameraNames, rtspUrls) {
+exports.deleteZoneminderCamera = function(host, port, name) {
+
+  return new Promise(function(resolve, reject) {
+    zoneminder.deleteCamera(host, port, name).then(function(){
+      resolve(name);
+    });
+  });
 
 };

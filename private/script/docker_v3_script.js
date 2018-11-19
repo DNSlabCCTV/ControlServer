@@ -10,33 +10,28 @@ exports.deleteContainer = function(data, callback) {
   });
 
   if (data.delete == "container") {
-    console.log("delete container");
-    var container = dockerHost.getContainer(data.name);
+    var container = dockerHost.getContainer(data.containerName);
 
     container.stop(function(err, data) {
       container.remove(function(err, data) {
         if (err) {
-          console.log("is err");
+          console.log("is err : "+ err);
         }
         return callback(err);
       });
     });
 
-    json.deleteContainer(data.path, data.obox, data.name);
+    json.deleteContainer(data.path, data.obox, data.containerName);
 
   } else if (data.delete == "camera") {
-    /*
-    zoneminder
-    */
-    //openCCTV.deleteCamer(data.obox)
-    console.log("delete camera");
-
-    //json.deleteCamera(data.path, data.obox, data.name);
+    openCCTV.deleteZoneminderCamera(data.host, data.webport, data.cameraName).then(function(){
+      console.log("delete camera");
+      json.deleteCamera(data.path, data.obox, data.containerName, data.cameraName);
+    });
   }
-
 };
 
-exports.makeCCTVContainer = function(host_address, image, cameraNames, rtspUrls, callback) {
+exports.makeCCTVContainer = function(host_address, image, cameraNames, rtspUrls, file_path, oboxName, callback) {
   result = {
     "success": 1
   };
@@ -47,7 +42,7 @@ exports.makeCCTVContainer = function(host_address, image, cameraNames, rtspUrls,
   /*
   컨테이너 생성을 위한  json parameter 생성
   */
-  this.makeConfig(image, dockerHost, function(parameter, containerJson) {
+  this.makeConfig(image, dockerHost, file_path, oboxName, function(parameter, containerJson) {
     console.log(containerJson);
     dockerHost.createContainer(parameter).then(function(container) {
       return container.start(); // 생성된 컨테이너 실행
@@ -56,7 +51,6 @@ exports.makeCCTVContainer = function(host_address, image, cameraNames, rtspUrls,
       container.inspect(function(err, data) {
 
         containerJson["name"] = data.Name.substring(1);
-
 
         host = host_address; //ip얻기
 
@@ -164,7 +158,7 @@ image - 이미지 이름
 container - 컨테이너 이름
 ports - 사용할 포트
 */
-exports.makeConfig = function(image, dockerHost, callback) {
+exports.makeConfig = function(image, dockerHost, file_path, oboxName, callback) {
   configData = {}; //컨테이너 생성 params을 담을 변수
   containerJson = {
     "name": ""
@@ -174,7 +168,7 @@ exports.makeConfig = function(image, dockerHost, callback) {
   //OpenCCTV별 이미지 값
   var IMAGES = {
     "kerberos": "kerberos/kerberos",
-    "zoneminder": "dlandon/zoneminder",
+    "zoneminder": "taaii6569/zoneminder_1_30_4",
   };
 
   //이미지별 컨테이너 사용 포트
@@ -213,28 +207,32 @@ exports.makeConfig = function(image, dockerHost, callback) {
   configData["ExposedPorts"] = EXPOSEDPORTS[image];
   containerJson["type"] = image;
 
-  context.getPort(dockerHost, function(ports) {
-    context.newPort(image, ports, function(newPort) {
-      //입력된 포트와 컨테이너 내부 포트 바인딩
-      switch (image) {
-        case "kerberos":
-          webPort = newPort[0];
-          streamPort = newPort[1];
-          HOSTCONFIG[image].PortBindings["80/tcp"][0].HostPort = webPort;
-          HOSTCONFIG[image].PortBindings["8889/tcp"][0].HostPort = streamPort;
-          containerJson["webport"] = webPort;
-          break;
-        case "zoneminder":
-          webPort = newPort[0];
-          HOSTCONFIG[image].PortBindings["80/tcp"][0].HostPort = webPort;
-          containerJson["webport"] = webPort;
-          break;
-      }
+  json.newContainerName(file_path, oboxName, image, function(newName){
+    configData["name"] = newName;
+    context.getPort(dockerHost, function(ports) {
+      context.newPort(image, ports, function(newPort) {
+        //입력된 포트와 컨테이너 내부 포트 바인딩
+        switch (image) {
+          case "kerberos":
+            webPort = newPort[0];
+            streamPort = newPort[1];
+            HOSTCONFIG[image].PortBindings["80/tcp"][0].HostPort = webPort;
+            HOSTCONFIG[image].PortBindings["8889/tcp"][0].HostPort = streamPort;
+            containerJson["webport"] = webPort;
+            break;
+          case "zoneminder":
+            webPort = newPort[0];
+            HOSTCONFIG[image].PortBindings["80/tcp"][0].HostPort = webPort;
+            containerJson["webport"] = webPort;
+            break;
+        }
 
-      configData["HostConfig"] = HOSTCONFIG[image];
+        configData["HostConfig"] = HOSTCONFIG[image];
 
-      callback(configData, containerJson); // parameter json 리턴
+        callback(configData, containerJson); // parameter json 리턴
+      });
     });
   });
+
 
 };

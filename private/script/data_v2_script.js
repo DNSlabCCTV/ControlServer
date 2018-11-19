@@ -21,6 +21,46 @@ exports.getData = function(file, callback) {
   });
 };
 
+exports.newContainerName = function(file, oboxName, type, callback) {
+  this.getData(file, function(err, data) {
+
+    var NAME = {
+      "kerberos": "KerberosIO",
+      "zoneminder": "Zoneminer",
+    };
+
+    result = {
+      "success": 1
+    };
+
+    if (err) {
+      result["success"] = 0;
+    }
+
+    oboxList = data.result;
+
+    for (i = 0; i < oboxList.length; i++) {
+      if (oboxName == data.result[i].name) {
+        containerList = oboxList[i].container;
+        break;
+      }
+    }
+
+
+    if(containerList.length == 0){
+      number = 0
+    }else{
+      lastContainer = containerList[containerList.length - 1];
+      number = lastContainer.name.split('_')[2];
+    }
+
+    number = Number(number) + 1;
+    newName = NAME[type] + "_" + oboxName + "_" + number;
+    callback(newName);
+
+  });
+};
+
 /*
 getOboxList() - obox이름을 json 형식으로 리턴한다.
 */
@@ -173,34 +213,63 @@ exports.addContainer = function(file_path, oboxName, containerJson, callback) {
   });
 };
 
-exports.deleteCamera = function(file_path, oboxName, cameraName, callback) {
-
-};
-
-exports.deleteContainer = function(file_path, oboxName, containerName, callback) {
+exports.deleteCamera = function(file_path, oboxName, containerName, cameraName) {
   this.getData(file_path, function(err, data_) {
     oboxList = data_.result;
-
     out:
       for (i = 0; i < oboxList.length; i++) {
         if (oboxList[i].name == oboxName) {
           for (j = 0; j < oboxList[i].container.length; j++) {
             if (oboxList[i].container[j].name == containerName) {
+              for (k = 0; k < oboxList[i].container[j].camera.length; k++) {
+                if (oboxList[i].container[j].camera[k].name == cameraName) {
+                  oboxList[i].container[j].camera.splice(k, 1);
+                  break out;
+                }
+              }
+            }
+          }
+        }
+      }
+
+    data = {
+      "Obox": oboxList
+    };
+
+    fs.writeFile(__dirname + "/../../" + file_path, JSON.stringify(data, null, '\t'), "utf8", function(err, data) {
+      result = {
+        "success": 1
+      };
+    });
+
+  });
+
+};
+
+exports.deleteContainer = function(file_path, oboxName, containerName) {
+  this.getData(file_path, function(err, data_) {
+    oboxList = data_.result;
+    out:
+      for (i = 0; i < oboxList.length; i++) {
+        if (oboxList[i].name == oboxName) {
+          for (j = 0; j < oboxList[i].container.length; j++) {
+            if (oboxList[i].container[j].name == containerName) {
+              oboxList[i].container.splice(j, 1);
               break out;
             }
           }
         }
       }
 
-    oboxList[i].container.splice(j, 1);
-
     data = {
       "Obox": oboxList
     };
 
-
-
-    fs.writeFile(__dirname + "/../../" + file_path, JSON.stringify(data, null, '\t'), "utf8");
+    fs.writeFile(__dirname + "/../../" + file_path, JSON.stringify(data, null, '\t'), "utf8", function(err, data) {
+      result = {
+        "success": 1
+      };
+    });
 
   });
 };
@@ -208,7 +277,7 @@ exports.deleteContainer = function(file_path, oboxName, containerName, callback)
 exports.getContainerName = function(file_path, oboxName, cameraName, callback) {
   this.getData(file_path, function(err, data) {
     result = {
-      "success":0,
+      "success": 0,
       "delete": "no camera"
     }
 
@@ -229,19 +298,19 @@ exports.getContainerName = function(file_path, oboxName, cameraName, callback) {
         }
       }
 
-    if(!result.success)
+    if (!result.success)
       return callback(result);
 
     type = containerArray[j].type;
     result["obox"] = oboxName;
     result["type"] = type;
-    result["name"] = containerArray[j].name;
+    result["containerName"] = containerArray[j].name;
 
     switch (type) {
       case "zoneminder":
         if (containerArray[j].camera.length > 1) {
           result["delete"] = "camera";
-          result["name"] = cameraName;
+          result["cameraName"] = cameraName;
           result["webport"] = containerArray[j].webport;
         }
         break;
@@ -274,3 +343,42 @@ exports.makeContainerJsonData = function(containerName, type, webPort, cameraNam
   return containerJson;
 
 };
+
+exports.getWebPort = function(file_path, oboxName, cameraName, callback) {
+  this.getData(file_path, function(err, data) {
+
+    result = {
+      "success": 0,
+      "webPort": "no camera"
+    }
+
+
+    outer: for (i = 0; i < data.result.length; i++) {
+      if (oboxName == data.result[i].name) { //해당 obox찾
+        containerArray = data.result[i].container; //각 obox의 컨테이너
+        for (j = 0; j < containerArray.length; j++) { //Container의 카메라확인
+          for (k = 0; k < containerArray[j].camera.length; k++) {
+            if (containerArray[j].camera[k].name == cameraName) {
+              result.success = 1;
+              result.webPort = containerArray[j].webport;
+              result.type = containerArray[j].type;
+              break outer;
+            }
+          }
+        }
+      }
+    }
+
+    callback(result);
+
+  });
+};
+
+/*
+file = "data/data_testbed2.json" ;
+obox = "JNU";
+type = "kerberos";
+this.newContainerName(file, obox, type, function(data){
+  console.log(data);
+});
+*/

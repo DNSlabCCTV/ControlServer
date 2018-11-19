@@ -251,10 +251,3 @@ exports.addContainer = function(fs, file, oboxName, containerName, container, ca
 
   });
 };
-
-/*
-makeContainerData() 컨테이너 데이터를 자동으로 생성해 주는 함수
-*/
-exports.makeContainerData = function(fs, file, containerName, port, camera, callback) {
-
-};

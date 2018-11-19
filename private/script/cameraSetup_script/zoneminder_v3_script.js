@@ -31,6 +31,34 @@ module.exports.checkServer = function(host, port) {
   });
 }
 
+
+
+module.exports.deleteCamera = function(host, port, name) {
+
+  context = this;
+
+  return new Promise(function(resolve, reject) {
+    context.getMonitorId(host, port, name, function(id) {
+
+      var options = {
+        url: "http://" + host + ":" + port + "/zm/api/monitors/" + id + ".json",
+        method: "DELETE"
+      }
+
+      request(options, function(error, response, body) {
+        if (error) {
+          console.log(error);
+        } else {
+          code = response.statusCode;
+          console.log(code);
+          resolve(code);
+        }
+      });
+
+    });
+  });
+};
+
 module.exports.zoneminderSetup = function(host, port, cameraName, rtspUrl) {
   //기본 유저 아이디 비밀번호 설정
   var context = this;
