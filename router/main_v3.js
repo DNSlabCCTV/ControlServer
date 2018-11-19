@@ -1,7 +1,7 @@
 var docker = require(__dirname + "/../private/script/docker_v3_script");
 var json = require(__dirname + "/../private/script/data_v2_script");
-var file_path = "data/data_testbed.json" //data 파일의 주소 (프로젝트 폴더를 기준으로)
-
+var file_path = "data/data_testbed2.json" //data 파일의 주소 (프로젝트 폴더를 기준으로)
+var request = require('request'); //http request를 위한 모듈
 //Server의 라우팅 메소드
 module.exports = function(host_address, app) {
   /*
@@ -80,17 +80,19 @@ module.exports = function(host_address, app) {
 
     res.json(result);
 
-    docker.makeCCTVContainer(host_address, image, cameras, rtsp, function(data) {
+    docker.makeCCTVContainer(host_address, image, cameras, rtsp, file_path, obox, function(data) {
       containerJson = data.result;
       //data.json에 컨테이너와 카메라 추가
       json.addContainer(file_path, obox, containerJson, function(err, result) {
-        console.log(result);
+        emitData = {};
+        emitData["oboxName"] = obox;
+        emitData["cameraArray"] = containerJson.camera;
 
-        req.app.io.emit('success', "success");
+        req.app.io.emit('addCamera', emitData);
 
       });
-
     });
+
   });
 
   /*
@@ -116,15 +118,54 @@ module.exports = function(host_address, app) {
       send_result["result"] = get_result;
       res.json(send_result);
       get_result["path"] = file_path;
-
+      get_result["host"] = host_address;
       console.log(get_result);
-      /*
+
       docker.deleteContainer(get_result, function(function_result) {
         //console.log(result);
-        req.app.io.emit('success', "success");
-      });
-      */
-    });
+        emitData = {};
+        emitData["oboxName"] = oboxName;
+        emitData["cameraName"] = cameraName;
+        req.app.io.emit('deleteCamera', emitData);
 
+      });
+    });
+  });
+
+  app.get('/openCCTVWeb/:oboxName/:cameraName', function(req, res) {
+
+    var oboxName = req.params.oboxName;
+    var cameraName = req.params.cameraName;
+
+    json.getWebPort(file_path, oboxName, cameraName, function(result) {
+      console.log(result);
+      openCCTVUrl = "http://" + host_address + ":" + result.webPort;
+
+      if (result.type = 'kerberos') {
+        path = openCCTVUrl + "/api/v1/login/login"; // login page
+
+        body_ = {
+          "username": "root", //default id
+          "password": "root" //default passwd
+        };
+
+        var options = {
+          url: path,
+          method: 'POST',
+          form: body_
+        };
+
+        request(options, function(error, response, body) {
+          if (!error && response.statusCode == 200) {
+            cookie = response.headers['set-cookie']; //쿠키 생성
+
+            res.cookie(cookie);
+            res.redirect(openCCTVUrl);
+          }
+        });
+      } else {
+        res.redirect(openCCTVUrl);
+      }
+    });
   });
 }
