@@ -26,7 +26,7 @@ exports.newContainerName = function(file, oboxName, type, callback) {
 
     var NAME = {
       "kerberos": "KerberosIO",
-      "zoneminder": "Zoneminer",
+      "zoneminder": "Zoneminder",
     };
 
     result = {

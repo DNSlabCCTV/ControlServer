@@ -1,6 +1,6 @@
 var docker = require(__dirname + "/../private/script/docker_v3_script");
 var json = require(__dirname + "/../private/script/data_v2_script");
-var file_path = "data/data_testbed2.json" //data 파일의 주소 (프로젝트 폴더를 기준으로)
+var file_path = "data/cbox_data.json" //data 파일의 주소 (프로젝트 폴더를 기준으로)
 var request = require('request'); //http request를 위한 모듈
 //Server의 라우팅 메소드
 module.exports = function(host_address, app) {
@@ -138,10 +138,9 @@ module.exports = function(host_address, app) {
     var cameraName = req.params.cameraName;
 
     json.getWebPort(file_path, oboxName, cameraName, function(result) {
-      console.log(result);
       openCCTVUrl = "http://" + host_address + ":" + result.webPort;
 
-      if (result.type = 'kerberos') {
+      if (result.type == 'kerberos') {
         path = openCCTVUrl + "/api/v1/login/login"; // login page
 
         body_ = {
@@ -163,9 +162,13 @@ module.exports = function(host_address, app) {
             res.redirect(openCCTVUrl);
           }
         });
-      } else {
+
+      } else if(result.type = 'zoneminder'){
+        console.log("else");
+        openCCTVUrl += "/zm";
         res.redirect(openCCTVUrl);
       }
+
     });
   });
 }

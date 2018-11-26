@@ -22,16 +22,12 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
+var myArgs = process.argv.slice(2);
 
+host_address = myArgs[0];
 
-request('http://api.ipify.org', function(error, response, body) {
-  host_address = body;
-
-
-  server.listen(PORT, function() {
-    console.log("Server address is " + "http://" + host_address + ":" + PORT);
-  });
-
-  var router = require('./router/main_v3')(host_address, app);
-
+server.listen(PORT, function() {
+  console.log("Server address is " + "http://" + host_address + ":" + PORT);
 });
+
+var router = require('./router/main_v3')(host_address, app);

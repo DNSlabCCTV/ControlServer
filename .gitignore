@@ -1,3 +1,4 @@
 #ignore the ftp file
 .ftpconfig
 data/data_testbed2.json
+data/cbox_data.json
