@@ -1,8 +1,10 @@
 var docker = require(__dirname + "/../private/script/docker_v3_script");
 var json = require(__dirname + "/../private/script/data_v2_script");
-var file_path = "data/cbox_data.json" //data 파일의 주소 (프로젝트 폴더를 기준으로)
+var config = require(__dirname + "/../data/config.json")
 var request = require('request'); //http request를 위한 모듈
 
+
+var file_path = "data/"+config.DATA //data 파일의 주소 (프로젝트 폴더를 기준으로)
 
 /*
 Server 라우팅 함수

@@ -4,15 +4,20 @@ var cors = require('cors');
 var request = require('request');
 var http = require('http');
 var socketIo = require('socket.io');
+var init = require(__dirname+"/private/script/initServer");
+var config = require("./data/config.json");
 
-var PORT = 3000;
+
+var PORT = config.PORT;
+var HOST = config.DOMAIN;
+var DATA = __dirname+"/data/"+config.DATA;
+var OBOXLIST = config.OBOXLIST;
 
 var app = express();
 var server = http.createServer(app);
 var io = socketIo(server);
 
-app.set('views', __dirname + '/views');
-app.set('view engine', 'ejs');
+init
 app.io = io;
 
 app.use(cors());
@@ -22,12 +27,10 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
-var myArgs = process.argv.slice(2);
-
-host_address = myArgs[0];
-
-server.listen(PORT, function() {
-  console.log("Server address is " + "http://" + host_address + ":" + PORT);
+init.initSetup(DATA, OBOXLIST).then(function(result){
+  server.listen(PORT, function() {
+    console.log("Server address is " + "http://" + HOST + ":" + PORT);
+  });
 });
 
-var router = require('./router/main_v3')(host_address, app);
+var router = require('./router/main_v3')(HOST, app);
