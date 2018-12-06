@@ -373,12 +373,3 @@ exports.getWebPort = function(file_path, oboxName, cameraName, callback) {
 
   });
 };
-
-/*
-file = "data/data_testbed2.json" ;
-obox = "JNU";
-type = "kerberos";
-this.newContainerName(file, obox, type, function(data){
-  console.log(data);
-});
-*/

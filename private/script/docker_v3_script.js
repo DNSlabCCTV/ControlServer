@@ -15,7 +15,7 @@ exports.deleteContainer = function(data, callback) {
     container.stop(function(err, data) {
       container.remove(function(err, data) {
         if (err) {
-          console.log("is err : "+ err);
+          console.log("Has error to make Container");
         }
         return callback(err);
       });
@@ -25,7 +25,6 @@ exports.deleteContainer = function(data, callback) {
 
   } else if (data.delete == "camera") {
     openCCTV.deleteZoneminderCamera(data.host, data.webport, data.cameraName).then(function(){
-      console.log("delete camera");
       json.deleteCamera(data.path, data.obox, data.containerName, data.cameraName);
     });
   }
@@ -43,7 +42,6 @@ exports.makeCCTVContainer = function(host_address, image, cameraNames, rtspUrls,
   컨테이너 생성을 위한  json parameter 생성
   */
   this.makeConfig(image, dockerHost, file_path, oboxName, function(parameter, containerJson) {
-    console.log(containerJson);
     dockerHost.createContainer(parameter).then(function(container) {
       return container.start(); // 생성된 컨테이너 실행
     }).then(function(container) {
@@ -63,7 +61,6 @@ exports.makeCCTVContainer = function(host_address, image, cameraNames, rtspUrls,
       });
 
     }).catch(function(err) {
-      console.log(err);
       result["success"] = 0;
       return callback(result);
     });

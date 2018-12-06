@@ -2,10 +2,16 @@ var docker = require(__dirname + "/../private/script/docker_v3_script");
 var json = require(__dirname + "/../private/script/data_v2_script");
 var file_path = "data/cbox_data.json" //data 파일의 주소 (프로젝트 폴더를 기준으로)
 var request = require('request'); //http request를 위한 모듈
-//Server의 라우팅 메소드
+
+
+/*
+Server 라우팅 함수
+*/
+
 module.exports = function(host_address, app) {
+
   /*
-    타대학에서의 HTTP Proxy URL을 받기위한 Restful API
+    Restful API 정의
   */
 
   /*
@@ -15,22 +21,33 @@ module.exports = function(host_address, app) {
   app.get('/Data', function(req, res) {
     json.getData(file_path, function(err, data) {
       res.json(data);
-
     });
   });
 
+  /*
+  GET /getOboxList
+  서버에 저장된 obox정보를 json 형식의 데이터를 리턴한다.
+  */
   app.get('/getOboxList', function(req, res) {
     json.getOboxList(file_path, function(err, data) {
       res.json(data);
     });
   });
 
+  /*
+  GET /getCamera
+  서버에 저장된 camera정보를 json 형식의 데이터를 리턴한다.
+  */
   app.get('/getCamera', function(req, res) {
     json.getCamera(file_path, function(err, data) {
       res.json(data);
     });
   });
 
+  /*
+  GET /getCameraByObox/:oboxName
+  oboxName을 parameter로 받아 해당 obox의 정보를 리턴한다.
+  */
   app.get('/getCameraByObox/:oboxName', function(req, res) {
     var oboxName = req.params.oboxName;
     json.getCameraByObox(file_path, oboxName, function(err, data) {
@@ -38,14 +55,16 @@ module.exports = function(host_address, app) {
     });
   });
 
+  /*
+  GET /getCameraByOboxAndCamera/:oboxName/:cameraName
+  oboxName을 parameter로 받아 해당 obox의 정보를 리턴한다.
+  */
   app.get('/getCameraByOboxAndCamera/:oboxName/:cameraName', function(req, res) {
     var oboxName = req.params.oboxName;
     var cameraName = req.params.cameraName;
-
     json.getCameraByOboxAndCameraName(file_path, oboxName, cameraName, function(err, data) {
       res.json(data);
     });
-
   });
 
   /*
@@ -119,7 +138,6 @@ module.exports = function(host_address, app) {
       res.json(send_result);
       get_result["path"] = file_path;
       get_result["host"] = host_address;
-      console.log(get_result);
 
       docker.deleteContainer(get_result, function(function_result) {
         //console.log(result);
@@ -157,18 +175,44 @@ module.exports = function(host_address, app) {
         request(options, function(error, response, body) {
           if (!error && response.statusCode == 200) {
             cookie = response.headers['set-cookie']; //쿠키 생성
-
             res.cookie(cookie);
             res.redirect(openCCTVUrl);
           }
         });
 
       } else if(result.type = 'zoneminder'){
-        console.log("else");
         openCCTVUrl += "/zm";
         res.redirect(openCCTVUrl);
       }
 
     });
+  });
+
+  /*
+  POST /addObox
+  obox 이름, obox host, obox port를 body parameter로 입력 받아
+  data.json 파일에 새로운 Obox를 추가한다.
+  */
+  app.post('/addObox', function(req, res) {
+
+    var result = {};
+    var obox = req.body.name; //obox이름
+    var host = req.body.host; //obox host
+    var port = req.body.port; //obox docker_port
+
+    // host와 port가 입력 받지 않았을 경우에러
+    if (!req.body["host"] || !req.body["port"]) {
+      result["success"] = 0;
+      result["error"] = "invalid request";
+      res.json(result);
+      return;
+    }
+
+    //data.json 파일에 추가한다.
+    json.addObox(fs, file_path, obox, host, port, function(err, result) {
+      res.json(result);
+      return;
+    });
+
   });
 }
