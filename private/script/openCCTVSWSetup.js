@@ -1,5 +1,5 @@
-var kerberos = require(__dirname + "/cameraSetup_script/kerberos_v3_script");
-var zoneminder = require(__dirname + "/cameraSetup_script/zoneminder_v3_script");
+var kerberos = require(__dirname + "/cameraSetup/kerberos");
+var zoneminder = require(__dirname + "/cameraSetup/zoneminder");
 
 KERBEROS_INTERBER_TIME = 2000;
 ZONEMINDER_INTERBER_TIME = 1000 * 30;

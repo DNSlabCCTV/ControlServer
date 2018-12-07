@@ -1,6 +1,6 @@
 {
   "DOMAIN": "127.0.0.1",
-  "DATA": "test.json",
+  "DATA": "data.json",
   "PORT": "3000",
   "DOCKERPATH":"/var/run/docker.sock",
   "OBOXLIST" : ["JNU", "KU", "UCI", "CHULA"]

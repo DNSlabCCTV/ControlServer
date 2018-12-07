@@ -1,7 +1,7 @@
 var Docker = require('dockerode'); //docker remoteapi를 사용할 수 있는 Nodejs Module
 var DOCKER_SOCKET_PATH = "/var/run/docker.sock";
-var openCCTV = require(__dirname + "/cameraSetup_v1_script"); //kerberos 컨테이너 실행을위한 함수 모듈
-var json = require(__dirname + "/data_v2_script");
+var openCCTV = require(__dirname + "/openCCTVSWSetup"); //kerberos 컨테이너 실행을위한 함수 모듈
+var json = require(__dirname + "/data");
 
 exports.deleteContainer = function(data, callback) {
 

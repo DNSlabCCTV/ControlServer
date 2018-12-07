@@ -33,4 +33,4 @@ init.initSetup(DATA, OBOXLIST).then(function(result){
   });
 });
 
-var router = require('./router/main_v3')(HOST, app);
+var router = require('./router/main')(HOST, app);

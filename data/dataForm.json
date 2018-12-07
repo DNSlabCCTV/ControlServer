@@ -1,0 +1,14 @@
+{
+  "Obox": [{
+    "name": "JNU",
+    "container": [{
+      "name": "containerName",
+      "type": "type",
+      "webport": "80",
+      "camera": [{
+        "name": "cameraName",
+        "url": "http proxy url"
+      }]
+    }]
+  }]
+}
