@@ -6,7 +6,7 @@
 
 ### ControlServer FrameWork
 
-![FrameWork](./img/controlserver_framework.png){: width = "320" height="410"}
+<img src="./img/controlserver_framework.png" style="width: 320px; height: 280px;"/>
 
 ### Explanation
 
