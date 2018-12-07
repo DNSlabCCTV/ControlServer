@@ -2,7 +2,7 @@
 
 ### ControlServer Architecture
 
-![Architecture](./img/koren_architecture.png){: width = "320" height="410"}
+![Architecture](./img/koren_architecture.png){: width = "320" height="280"}
 
 ### ControlServer FrameWork
 
